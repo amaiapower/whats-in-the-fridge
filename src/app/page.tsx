@@ -1,41 +1,126 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import IngredientInput from "@/components/IngredientInput";
-import VibeSelector from "@/components/VibeSelector";
-import ServingsInput from "@/components/ServingsInput";
-import RecipeDisplay from "@/components/RecipeDisplay";
-import RecipeHistory from "@/components/RecipeHistory";
+import { useEffect, useState } from "react";
+import RetroIngredientInput from "@/components/retro/RetroIngredientInput";
+import RetroControls, { RETRO_VIBES } from "@/components/retro/RetroControls";
+import RetroAllergies from "@/components/retro/RetroAllergies";
+import RetroHistory from "@/components/retro/RetroHistory";
+import RetroRecipeDisplay from "@/components/retro/RetroRecipeDisplay";
+import { FryingPan, PanSmoke } from "@/components/retro/FryingPanDoodle";
 import { useRecipeHistory } from "@/hooks/useRecipeHistory";
 import type { GeneratedRecipe, Ingredient, SavedRecipe } from "@/lib/types";
-import { VIBES } from "@/lib/types";
+import { DISH_TYPES, ALLERGY_PRESETS } from "@/lib/types";
+
+type View = "form" | "loading" | "result";
+
+const LOADING_MESSAGES = [
+  "Rummaging around the fridge…",
+  "Chopping everything up…",
+  "Heating up the pan…",
+  "Getting it all sizzling…",
+  "Plating things up…",
+  "Adding a little garnish…",
+];
+
+const STAGE_INTERVAL_MS = 5500;
+const FADE_MS = 350;
 
 export default function Home() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [vibe, setVibe] = useState(VIBES[0].id);
+  const [dishType, setDishType] = useState(DISH_TYPES[0].id);
+  const [vibes, setVibes] = useState<string[]>([RETRO_VIBES[0].id]);
+  const [spiceLevel, setSpiceLevel] = useState(0);
+  const [saltLevel, setSaltLevel] = useState(0);
+  const [sweetLevel, setSweetLevel] = useState(0);
+  const [allergyPresets, setAllergyPresets] = useState<string[]>([]);
+  const [customAllergies, setCustomAllergies] = useState<string[]>([]);
   const [servings, setServings] = useState(2);
   const [recipe, setRecipe] = useState<GeneratedRecipe | null>(null);
-  const [activeId, setActiveId] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
+  const [view, setView] = useState<View>("form");
+  const [stageIndex, setStageIndex] = useState(0);
+  const [stageVisible, setStageVisible] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const { history, addRecipe, removeRecipe } = useRecipeHistory();
 
   const includedNames = ingredients.filter((i) => i.included).map((i) => i.name);
 
+  useEffect(() => {
+    if (view !== "loading") return;
+    let index = 0;
+    setStageIndex(0);
+    setStageVisible(true);
+    let fadeTimeout: ReturnType<typeof setTimeout>;
+    const interval = setInterval(() => {
+      if (index >= LOADING_MESSAGES.length - 1) {
+        // hold on the final message rather than looping back to the start
+        clearInterval(interval);
+        return;
+      }
+      setStageVisible(false);
+      fadeTimeout = setTimeout(() => {
+        index += 1;
+        setStageIndex(index);
+        setStageVisible(true);
+      }, FADE_MS);
+    }, STAGE_INTERVAL_MS);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(fadeTimeout);
+    };
+  }, [view]);
+
+  function handleToggleVibe(vibeId: string) {
+    setVibes((prev) => {
+      if (prev.includes(vibeId)) {
+        // keep at least one vibe selected
+        return prev.length === 1 ? prev : prev.filter((v) => v !== vibeId);
+      }
+      return [...prev, vibeId];
+    });
+  }
+
+  function handleToggleAllergyPreset(id: string) {
+    setAllergyPresets((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+    );
+  }
+
+  function handleAddCustomAllergy(value: string) {
+    setCustomAllergies((prev) => (prev.includes(value) ? prev : [...prev, value]));
+  }
+
+  function handleRemoveCustomAllergy(value: string) {
+    setCustomAllergies((prev) => prev.filter((v) => v !== value));
+  }
+
+  const avoid = [
+    ...allergyPresets.map((id) => ALLERGY_PRESETS.find((p) => p.id === id)?.label ?? id),
+    ...customAllergies,
+  ];
+
   async function handleGenerate() {
     if (includedNames.length === 0) {
       setError("Add (and tick) at least one ingredient first.");
       return;
     }
-    setLoading(true);
     setError(null);
+    setView("loading");
+    const vibe = vibes.join(", ");
     try {
       const res = await fetch("/api/generate-recipe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ingredients: includedNames, vibe, servings }),
+        body: JSON.stringify({
+          ingredients: includedNames,
+          dishType,
+          vibe,
+          servings,
+          spiceLevel,
+          saltLevel,
+          sweetLevel,
+          avoid,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -43,114 +128,115 @@ export default function Home() {
       }
       const generated = data as GeneratedRecipe;
       setRecipe(generated);
-      const saved = addRecipe(generated, { ingredients: includedNames, vibe, servings });
-      setActiveId(saved.id);
+      addRecipe(generated, {
+        ingredients: includedNames,
+        dishType,
+        vibe,
+        servings,
+        spiceLevel,
+        saltLevel,
+        sweetLevel,
+        avoid,
+      });
+      setView("result");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
+      setView("form");
     }
   }
 
   function handleSelectHistory(saved: SavedRecipe) {
     setRecipe(saved);
-    setActiveId(saved.id);
     setError(null);
+    setView("result");
   }
 
-  function handleRemoveHistory(id: string) {
-    removeRecipe(id);
-    if (id === activeId) {
-      setActiveId(undefined);
-    }
+  function handleNewRecipe() {
+    setRecipe(null);
+    setView("form");
   }
 
   return (
-    <div className="flex-1 px-4 py-10 sm:px-8 sm:py-14">
-      <div className="fixed top-4 right-4 flex flex-col items-end gap-1 text-xs text-ink-soft/50">
-        <Link href="/simple" className="hover:text-ink-soft transition-colors">
-          simplified version ›
-        </Link>
-        <Link href="/retro" className="hover:text-ink-soft transition-colors">
-          retro version ›
-        </Link>
-      </div>
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10 text-center">
-          <h1 className="font-hand text-6xl sm:text-7xl text-terracotta-dark leading-none">
-            What&rsquo;s in the fridge?
-          </h1>
-          <svg
-            className="mx-auto mt-2 w-40 h-3 text-sage"
-            viewBox="0 0 160 12"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M2 8 Q30 2 55 7 T110 6 T158 4"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
+    <div className="relative flex-1 flex items-center justify-center px-4 py-10 sm:py-16 overflow-hidden">
+      <div className="w-full max-w-xl">
+        {view === "loading" && (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <p
+              className={`font-retro text-3xl text-rust transition-opacity duration-300 ease-in-out ${
+                stageVisible ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {LOADING_MESSAGES[stageIndex]}
+            </p>
+            <div className="flex flex-col items-center">
+              <FryingPan className="w-16 h-10" />
+              <PanSmoke mode="always" className="w-16 h-10 -mt-10" />
+            </div>
+            <p className="text-xs text-ink-soft/70 font-body">still cooking — hang tight</p>
+          </div>
+        )}
+
+        {view === "form" && (
+          <div className="animate-[fadein-slow_.4s_ease] space-y-6">
+            <RetroIngredientInput ingredients={ingredients} onChange={setIngredients} />
+
+            <RetroControls
+              dishType={dishType}
+              onDishTypeChange={setDishType}
+              vibes={vibes}
+              onToggleVibe={handleToggleVibe}
+              spiceLevel={spiceLevel}
+              onSpiceLevelChange={setSpiceLevel}
+              saltLevel={saltLevel}
+              onSaltLevelChange={setSaltLevel}
+              sweetLevel={sweetLevel}
+              onSweetLevelChange={setSweetLevel}
+              servings={servings}
+              onServingsChange={setServings}
             />
-          </svg>
-          <p className="mt-3 text-ink-soft max-w-md mx-auto">
-            List what you&rsquo;ve got, pick a vibe, and we&rsquo;ll dream up an original recipe
-            just for you.
-          </p>
-        </header>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,400px)_1fr] items-start">
-          <div className="space-y-6">
-            <IngredientInput ingredients={ingredients} onChange={setIngredients} />
-            <VibeSelector value={vibe} onChange={setVibe} />
-            <ServingsInput value={servings} onChange={setServings} />
+            <RetroAllergies
+              selectedPresets={allergyPresets}
+              onTogglePreset={handleToggleAllergyPreset}
+              customEntries={customAllergies}
+              onAddCustom={handleAddCustomAllergy}
+              onRemoveCustom={handleRemoveCustomAllergy}
+            />
 
-            <div>
+            <div className="flex flex-col items-center">
               <button
                 type="button"
                 onClick={handleGenerate}
-                disabled={loading}
-                className="w-full rounded-2xl bg-terracotta py-3.5 text-lg font-bold text-paper shadow-sm hover:bg-terracotta-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="peer rounded-lg bg-rust px-6 py-2.5 font-retro text-2xl text-paper shadow-sm hover:bg-terracotta-dark hover:-rotate-1 transition-all cursor-pointer"
               >
-                {loading ? "Whisking up ideas…" : "Generate recipe"}
+                Start cooking
               </button>
-              {error && (
-                <p className="mt-2 text-sm text-terracotta-dark text-center">{error}</p>
-              )}
+
+              <FryingPan className="w-16 h-10 mt-4" />
+              <PanSmoke mode="peer-hover" className="w-16 h-10 -mt-10" />
+
+              {error && <p className="mt-2 text-sm text-terracotta-dark font-body">{error}</p>}
             </div>
 
-            <RecipeHistory
-              history={history}
-              activeId={activeId}
-              onSelect={handleSelectHistory}
-              onRemove={handleRemoveHistory}
-            />
+            <RetroHistory history={history} onSelect={handleSelectHistory} onRemove={removeRecipe} />
           </div>
+        )}
 
-          <div>
-            {recipe ? (
-              <RecipeDisplay recipe={recipe} />
-            ) : (
-              <EmptyState loading={loading} />
-            )}
+        {view === "result" && recipe && (
+          <div className="animate-[fadein-slow_.4s_ease] space-y-4">
+            <button
+              type="button"
+              onClick={handleNewRecipe}
+              className="font-retro text-xl text-ink-soft hover:text-rust transition-colors cursor-pointer"
+            >
+              ‹ New recipe
+            </button>
+            <div className="mt-12">
+              <RetroRecipeDisplay recipe={recipe} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
-    </div>
-  );
-}
-
-function EmptyState({ loading }: { loading: boolean }) {
-  return (
-    <div className="rounded-3xl border-2 border-dashed border-line p-14 text-center">
-      <p className="font-hand text-3xl text-ink-soft mb-2">
-        {loading ? "Rummaging through the fridge…" : "Your recipe will appear here"}
-      </p>
-      <p className="text-sm text-ink-soft/80">
-        {loading
-          ? "Searching for inspiration and writing something original."
-          : "Add your ingredients, pick a vibe, and tap generate."}
-      </p>
     </div>
   );
 }

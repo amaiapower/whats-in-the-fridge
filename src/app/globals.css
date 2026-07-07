@@ -1,22 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --cream: #faf6ef;
-  --paper: #fffdf8;
-  --card: #f5efe2;
-  --terracotta: #c67b58;
-  --terracotta-dark: #ab6144;
-  --sage: #96a97c;
-  --sage-dark: #798c60;
-  --ink: #4a3728;
-  --ink-soft: #7a6350;
-  --line: #e4d9c4;
-
-  /* warm, cozy additions for the retro variant */
-  --mustard: #d9922f;
-  --mustard-dark: #b8791e;
-  --rust: #a8462b;
-  --butter: #f2ddad;
+  --cream: #ffcdb2;
+  --paper: #fff6f1;
+  --card: #ffdcc7;
+  --terracotta: #e5989b;
+  --terracotta-dark: #b5838d;
+  --sage: #ffb4a2;
+  --sage-dark: #b5838d;
+  --ink: #6d6875;
+  --ink-soft: #8f8791;
+  --line: #e8d3d3;
+  --mustard: #ffb4a2;
+  --mustard-dark: #e5989b;
+  --rust: #6d6875;
+  --butter: #ffdcc7;
 }
 
 @theme inline {
@@ -34,33 +32,11 @@
   --color-mustard-dark: var(--mustard-dark);
   --color-rust: var(--rust);
   --color-butter: var(--butter);
-  --font-hand: var(--font-handwritten);
   --font-body: var(--font-body);
   --font-retro: var(--font-retro-scrawl);
 }
 
 body {
-  background: var(--cream);
-  color: var(--ink);
-}
-
-/* dusty rose/mauve palette, scoped to the retro variant only */
-.retro-theme {
-  --cream: #ffcdb2;
-  --paper: #fff6f1;
-  --card: #ffdcc7;
-  --terracotta: #e5989b;
-  --terracotta-dark: #b5838d;
-  --sage: #ffb4a2;
-  --sage-dark: #b5838d;
-  --ink: #6d6875;
-  --ink-soft: #8f8791;
-  --line: #e8d3d3;
-  --mustard: #ffb4a2;
-  --mustard-dark: #e5989b;
-  --rust: #6d6875;
-  --butter: #ffdcc7;
-
   background: var(--cream);
   color: var(--ink);
 }
@@ -89,29 +65,6 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes pan-wobble {
-  0%,
-  100% {
-    transform: rotate(-1.25deg);
-  }
-  50% {
-    transform: rotate(1.25deg);
-  }
-}
-
-@keyframes sizzle-hop {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  35% {
-    transform: translateY(-7px) scale(1.05);
-  }
-  60% {
-    transform: translateY(0) scale(0.97);
   }
 }
 

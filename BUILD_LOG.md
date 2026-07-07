@@ -32,3 +32,22 @@ Starting git tracking now means every future change gets a real commit, a screen
 short written record of why it happened.
 
 **Screenshots:** see the three files listed above.
+
+## 2026-07-07 — Reduced to a single version (retro), pushed to GitHub
+
+**Prompt:** "i believe i am finished with the project, can we deploy to github?" followed by
+"wait, i dont want the three versions accessible, just the most updated version" — the retro
+version was chosen as the one to keep, moved to the homepage, and the other two deleted entirely
+from the codebase (not just unlinked).
+
+**Reasoning:** With deployment approaching, having three parallel versions live at once (the
+original, simple, and retro) no longer made sense — only the most developed one should be
+public. The retro version had received by far the most rounds of refinement (dish types, vibes,
+spice/salt/sweet levels, allergy preferences, notepad styling, tape details), so it became `/`.
+The original and simple versions' pages and any components used exclusively by them were deleted
+outright rather than left dangling and unlinked, since the goal was a clean, minimal codebase
+with nothing left to accidentally expose. The retro-only color palette and Handlee font, which
+had been scoped to a `.retro-theme` class so they could coexist with the other two versions'
+styling, were folded directly into the root theme now that there's only one version to serve.
+
+**Screenshots:** `build-log/screenshots/v2-single-retro-homepage.png`

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Caveat, Nunito } from "next/font/google";
+import { Handlee, Nunito } from "next/font/google";
 import "./globals.css";
 
-const caveat = Caveat({
-  variable: "--font-handwritten",
+const handlee = Handlee({
+  variable: "--font-retro-scrawl",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: "400",
 });
 
 const nunito = Nunito({
@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${caveat.variable} ${nunito.variable} h-full antialiased`}
+      className={`${handlee.variable} ${nunito.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream font-body text-ink">
         {children}
