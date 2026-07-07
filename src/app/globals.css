@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+:root {
+  --cream: #faf6ef;
+  --paper: #fffdf8;
+  --card: #f5efe2;
+  --terracotta: #c67b58;
+  --terracotta-dark: #ab6144;
+  --sage: #96a97c;
+  --sage-dark: #798c60;
+  --ink: #4a3728;
+  --ink-soft: #7a6350;
+  --line: #e4d9c4;
+
+  /* warm, cozy additions for the retro variant */
+  --mustard: #d9922f;
+  --mustard-dark: #b8791e;
+  --rust: #a8462b;
+  --butter: #f2ddad;
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-dark: var(--terracotta-dark);
+  --color-sage: var(--sage);
+  --color-sage-dark: var(--sage-dark);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-mustard: var(--mustard);
+  --color-mustard-dark: var(--mustard-dark);
+  --color-rust: var(--rust);
+  --color-butter: var(--butter);
+  --font-hand: var(--font-handwritten);
+  --font-body: var(--font-body);
+  --font-retro: var(--font-retro-scrawl);
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+}
+
+/* dusty rose/mauve palette, scoped to the retro variant only */
+.retro-theme {
+  --cream: #ffcdb2;
+  --paper: #fff6f1;
+  --card: #ffdcc7;
+  --terracotta: #e5989b;
+  --terracotta-dark: #b5838d;
+  --sage: #ffb4a2;
+  --sage-dark: #b5838d;
+  --ink: #6d6875;
+  --ink-soft: #8f8791;
+  --line: #e8d3d3;
+  --mustard: #ffb4a2;
+  --mustard-dark: #e5989b;
+  --rust: #6d6875;
+  --butter: #ffdcc7;
+
+  background: var(--cream);
+  color: var(--ink);
+}
+
+::selection {
+  background: var(--terracotta);
+  color: var(--paper);
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadein-slow {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pan-wobble {
+  0%,
+  100% {
+    transform: rotate(-1.25deg);
+  }
+  50% {
+    transform: rotate(1.25deg);
+  }
+}
+
+@keyframes sizzle-hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-7px) scale(1.05);
+  }
+  60% {
+    transform: translateY(0) scale(0.97);
+  }
+}
+
+@keyframes steam-rise {
+  0% {
+    transform: translateY(2px) scaleX(1);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(-16px) scaleX(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes handwrite-in {
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+  100% {
+    clip-path: inset(0 0% 0 0);
+  }
+}
