@@ -51,3 +51,11 @@ had been scoped to a `.retro-theme` class so they could coexist with the other t
 styling, were folded directly into the root theme now that there's only one version to serve.
 
 **Screenshots:** `build-log/screenshots/v2-single-retro-homepage.png`
+
+## 2026-07-13 — Fixed recipe generation timing out on Vercel
+
+**Prompt:** "My recipe generation function is timing out on Vercel after 60 seconds... Can you add timing/logging around the Anthropic API call... check whether the code is doing anything else that could be slow... check what model I'm currently calling."
+
+**Reasoning:** Generation was hitting Vercel's 60s function limit. The `/api/generate-recipe` route makes a single Anthropic call, but the web search tool was configured with `max_uses: 5` — each search round is a full search-then-continue-generating cycle happening inside that one request, so a worst-case run could chain 5 rounds before returning. Added timing/usage logging around the API call so slowness is visible in server logs instead of failing silently, then reduced `max_uses` to 3, switched to the current dynamic-filtering `web_search_20260209` tool variant, and set `output_config.effort` to `"medium"` (Sonnet 5 defaults to `"high"`) to cut per-step latency. Separately, the account tied to the API key had run out of credit, which was producing fast, unrelated 400 errors that looked like part of the same problem until isolated — the user rotated to a new key and updated it in Vercel and locally. Verified end-to-end after both fixes: a real generation (with 2 web searches) completed in 35.3s, comfortably under the 60s limit.
+
+**Screenshots:** none — server-side/API-only change, no visual difference from `v2-single-retro-homepage.png`.
