@@ -75,15 +75,17 @@ export async function POST(request: Request) {
   const anthropic = new Anthropic({ apiKey });
 
   try {
+    const apiCallStart = performance.now();
     const message = await anthropic.messages.create({
       model: "claude-sonnet-5",
       max_tokens: 8000,
       system: buildSystemPrompt(),
+      output_config: { effort: "medium" },
       tools: [
         {
-          type: "web_search_20260318",
+          type: "web_search_20260209",
           name: "web_search",
-          max_uses: 5,
+          max_uses: 3,
         },
       ],
       messages: [
@@ -102,6 +104,16 @@ export async function POST(request: Request) {
         },
       ],
     });
+    const apiCallMs = performance.now() - apiCallStart;
+
+    const searchResultBlocks = message.content.filter(
+      (block) => block.type === "web_search_tool_result"
+    ).length;
+    console.log(
+      `[generate-recipe] Anthropic call: ${apiCallMs.toFixed(0)}ms, ` +
+        `stop_reason=${message.stop_reason}, web_searches=${searchResultBlocks}, ` +
+        `input_tokens=${message.usage.input_tokens}, output_tokens=${message.usage.output_tokens}`
+    );
 
     const text = message.content
       .filter((block): block is Anthropic.TextBlock => block.type === "text")
