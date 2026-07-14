@@ -122,9 +122,17 @@ export default function Home() {
           avoid,
         }),
       });
-      const data = await res.json();
+      let data: unknown;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error(
+          `Recipe generation failed unexpectedly (status ${res.status}). Please try again.`
+        );
+      }
       if (!res.ok) {
-        throw new Error(data.error || "Something went wrong generating your recipe.");
+        const errMessage = (data as { error?: string } | null)?.error;
+        throw new Error(errMessage || "Something went wrong generating your recipe.");
       }
       const generated = data as GeneratedRecipe;
       setRecipe(generated);
@@ -153,6 +161,7 @@ export default function Home() {
 
   function handleNewRecipe() {
     setRecipe(null);
+    setError(null);
     setView("form");
   }
 
